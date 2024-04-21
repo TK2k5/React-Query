@@ -5,4 +5,8 @@ export default {
     extend: {},
   },
   plugins: [],
+  corePlugins: {
+    preflight: false, // <== disable this!
+  },
+  prefix: "tw-",
 };
