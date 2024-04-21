@@ -1,10 +1,7 @@
-import { Button, Drawer, Form, Input, Skeleton, message } from "antd";
-import { getSkillByID, updateSkill } from "../../../apis/skill.api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, Drawer, Form, Input, Skeleton } from "antd";
 
 import { ISkill } from "../../../interfaces/skill.interface";
-import { useEffect } from "react";
-import { useForm } from "antd/es/form/Form";
+import { useUpdateSkill } from "../../../hooks/useSkill";
 
 interface DrawerFormEditPros {
   open: boolean;
@@ -13,39 +10,10 @@ interface DrawerFormEditPros {
 }
 
 const DrawerFormEdit = ({ open, onClose, idSkill }: DrawerFormEditPros) => {
-  const queryClient = useQueryClient();
-  const [form] = useForm();
-  const editMutation = useMutation({
-    mutationFn: (data: ISkill) => updateSkill(data),
-    onSuccess: () => {
-      message.success("Cập nhật kỹ năng thành công!");
-      onClose();
-      queryClient.invalidateQueries({ queryKey: ["skill"] });
-    },
-    onError: () => {
-      message.error("Cập nhật kỹ năng thất bại");
-    },
-  });
-
-  const { data, isLoading, isError, isSuccess } = useQuery({
-    queryKey: ["skill", idSkill],
-    queryFn: () => getSkillByID(idSkill),
-    enabled: !!idSkill, //idSkill != null || idSkill != undefined
-  });
-
-  const onSubmit = (data: Omit<ISkill, "id">) => {
-    editMutation.mutate({
-      ...data,
-      id: idSkill,
-    });
+  const { isError, isLoading, form, onSubmit } = useUpdateSkill(idSkill);
+  const handleSubmit = (data: ISkill) => {
+    onSubmit(data), onClose();
   };
-
-  useEffect(() => {
-    if (isSuccess) {
-      form.setFieldsValue(data);
-    }
-  }, [data, isSuccess, form]);
-
   if (isLoading) {
     return <Skeleton active />;
   }
@@ -56,7 +24,7 @@ const DrawerFormEdit = ({ open, onClose, idSkill }: DrawerFormEditPros) => {
 
   return (
     <Drawer title="Edit Skill" onClose={onClose} open={open}>
-      <Form form={form} onFinish={onSubmit} layout="vertical">
+      <Form form={form} onFinish={handleSubmit} layout="vertical">
         <Form.Item
           label="Tên kỹ năng"
           name="title"

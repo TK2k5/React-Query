@@ -8,20 +8,19 @@ import {
   Table,
   TableProps,
   Tooltip,
-  message,
 } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDeleteSkill, useGetAllSkills } from "../../hooks/useSkill";
 
 import DrawerForm from "./components/drawer-form";
 import DrawerFormEdit from "./components/drawer-form-edit";
 import { ISkill } from "../../interfaces/skill.interface";
-import axios from "axios";
-import { deleteSkill } from "../../apis/skill.api";
 import { useState } from "react";
 
 const HomePage = () => {
-  const queryClient = useQueryClient();
+  const { handleDelete } = useDeleteSkill();
+  const { data, isError, isLoading } = useGetAllSkills();
+
   const [openEdit, setOpenEdit] = useState(false);
   const [idSkill, setIdSkill] = useState<number | null>(null);
 
@@ -79,29 +78,6 @@ const HomePage = () => {
       },
     },
   ];
-
-  const { data, isError, isLoading } = useQuery<ISkill[]>({
-    queryKey: ["skill"],
-    queryFn: async () => {
-      const response = await axios.get("http://localhost:3000/skills");
-      return response.data;
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteSkill(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["skill"] });
-      message.success("Delete Success!");
-    },
-    onError: () => {
-      message.error("Delete Failed!");
-    },
-  });
-
-  const handleDelete = (id: number) => {
-    deleteMutation.mutate(id);
-  };
 
   if (isLoading) {
     return <Skeleton active />;
